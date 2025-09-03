@@ -6,8 +6,8 @@ const orderSchema = new mongoose.Schema(
     items: [
       {
         productId: { type: mongoose.Schema.Types.ObjectId, ref: "Product", required: true },
-        productName: { type: String, required: true },  
-        productCode: { type: String, required: true },  
+        productName: { type: String, required: true },
+        productCode: { type: String, required: true },
         qty: { type: Number, required: true },
         price: { type: Number, required: true }
       }
@@ -28,9 +28,13 @@ const orderSchema = new mongoose.Schema(
         "refunded",
         "refund_failed",
         "refund_pending",
-        "assigned"
+        "assigned",
+        "under_process",
+        "gone_for_delivery",
+        "pending_confirm",
+        "new"
       ],
-      default: "pending"
+      default: "new"
     },
     customer: {
       name: String,
@@ -55,14 +59,27 @@ const orderSchema = new mongoose.Schema(
       method: { type: String, enum: ["cod", "online"], default: "cod" },
       paid: { type: Boolean, default: false }
     },
-   delivery_boy: {
-  id: { type: Number }, 
-  name: { type: String },
-  email: { type: String }
-   },
+    customerMissingProducts: [
+      {
+        productId: { type: mongoose.Schema.Types.ObjectId, ref: "Product" },
+        quantity: Number,
+        note: String,
+        reportedAt: { type: Date, default: Date.now },
+      },
+    ],
+    cancelledBy: { type: mongoose.Schema.Types.ObjectId, ref: "User" },
+    cancelledAt: { type: Date },
+    cancelReason: { type: String },
+
+    delivery_boy: {
+      id: { type: Number },
+      name: { type: String },
+      email: { type: String }
+    },
     assignedAt: { type: Date },
     deliveredAt: { type: Date }
   },
+
   { timestamps: true }
 );
 

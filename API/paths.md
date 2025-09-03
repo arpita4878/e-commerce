@@ -1,4 +1,5 @@
 ## PATH
+@Rpitaseth1603-chatgpt
 
 ## for login
 http://localhost:5000/users/login
@@ -84,6 +85,10 @@ post-----http://localhost:5000/api/products
     "battery": "5000mAh"
   },
   "isActive": true
+  keywords:{
+    "mobile",
+    "phone"
+  }
 }
 
 
@@ -295,6 +300,32 @@ PUT-------http://localhost:5000/api/orders/68b69461b1de00995a513bb8/confirm
 
 68b69461b1de00995a513bb8---order id
 
+
+## for ADMIN
+
+## out for delivery
+GET----http://localhost:5000/api/orders/out-for-delivery
+
+
+## fetch new added order
+GET-------------http://localhost:5000/api/orders/new
+
+##  fetch delivered ordered 
+GET-----http://localhost:5000/api/orders/delivered
+
+
+## delivered missing product
+
+GET----http://localhost:5000/api/orders/delivered-missing
+
+## cancel order
+GET------------http://localhost:5000/api/orders/cancel-order
+
+## under porcess
+GET----------------http://localhost:5000/api/orders/under-process
+
+## pendig confirm
+GET-------------http://localhost:5000/api/orders/pending-confirm
 
 -----------------------------------------------------------------------------------
 ## REPORT
