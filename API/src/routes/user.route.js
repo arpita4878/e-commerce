@@ -7,6 +7,7 @@ const router = express.Router();
 
 router.post("/register", authController.register);
 router.post("/login", authController.login);
+router.post("/refresh-token", authController.refreshToken);
 
 router.post("/forgot-password", UserController.forgotPassword);
 router.post("/reset/:token", UserController.resetPassword);
@@ -15,6 +16,8 @@ router.post("/change-password",UserController.changePassword);
 router.get('/getdata', UserController.fetch); 
 router.patch('/updateUser', UserController.update); 
 router.delete('/delete', UserController.deleteUser); 
+
+router.get("/get-customer/:phone",UserController.getCustomerByPhone)
 
 // router.post("/change-password", authMiddleware, changePassword);
 

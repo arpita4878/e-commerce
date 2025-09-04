@@ -17,15 +17,17 @@ import {
   listGoneForDeliveryOrders
 } from "../controller/order.controller.js";
 
+import { protect } from "../middleware/auth.middleware.js";
+
 const router = Router();
 
 router.get("/", listOrders);
 
-router.post("/", createOrder);
+router.post("/", protect,createOrder);
 
 router.post("/:id/report-missing", reportMissingProducts);
 
-router.post("/:id/cancel-order", cancelOrderByCustomer);
+router.post("/:id/cancel-order",protect, cancelOrderByCustomer);
 
 //delivery boy
 router.put("/:id/assign", assignDelivery);

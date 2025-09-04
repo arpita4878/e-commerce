@@ -40,6 +40,7 @@ const orderSchema = new mongoose.Schema(
       name: String,
       phone: Number,
       address: String,
+      customerId: { type:Number, required: true ,ref: "User" },
       location: {
         type: { type: String, enum: ["Point"], default: "Point" },
         coordinates: { type: [Number], default: [0, 0] } // [lng, lat]
@@ -67,7 +68,7 @@ const orderSchema = new mongoose.Schema(
         reportedAt: { type: Date, default: Date.now },
       },
     ],
-    cancelledBy: { type: mongoose.Schema.Types.ObjectId, ref: "User" },
+    cancelledBy: { type: Number, ref: "User" },
     cancelledAt: { type: Date },
     cancelReason: { type: String },
 

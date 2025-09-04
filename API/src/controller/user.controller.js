@@ -125,3 +125,45 @@ export const update = async (req, res) => {
     res.status(500).json({ status: false, message: "Server error", code: 500 });
   }
 };
+
+
+
+
+// GET CUSTOMER DETAILS BY PHONE (used by staff at billing)
+export const getCustomerByPhone = async (req, res) => {
+  try {
+    const { phone } = req.params;
+
+    if (!phone) {
+      return res.status(400).json({
+        status: false,
+        message: "Customer phone number is required",
+        code: 400,
+      });
+    }
+
+    const customer = await User.findOne({ phone, role: "supermarket_customer" ||"online_customer" });
+
+    if (!customer) {
+      return res.status(404).json({
+        status: false,
+        message: "Customer not found",
+        code: 404,
+      });
+    }
+
+    return res.status(200).json({
+      status: true,
+      message: "Customer details fetched successfully",
+      code: 200,
+      data: customer,
+    });
+  } catch (error) {
+    return res.status(500).json({
+      status: false,
+      message: "Server error",
+      code: 500,
+      data: error.message,
+    });
+  }
+};

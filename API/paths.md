@@ -19,6 +19,8 @@ http://localhost:5000/users/register
     "role":"super_admin"
 }
 
+## refresh token
+POST------------http://localhost:5000/users/refresh-token
 
 ## forgot-password
 http://localhost:5000/users/forgot-password
@@ -61,6 +63,8 @@ for all-------http://localhost:5000/users/getdata
 for specfic--------params------email---demo@gmail.com
 
 
+## get customer using phone number 
+http://localhost:5000/users/get-customer/7999343606
 
 ----------------------------------------------------------------------------------------
 
@@ -214,16 +218,13 @@ cod
   "branch": "68b56cbd4071c4277f97522f",
   "items": [
     {
-      "productId": "68b67cd41b398258eadea289",
-      "qty": 2
-    },
-    {
-      "productId": "68b56c404071c4277f975229",
+      "productId": "68b7d315a28a2dd943afba51",
       "qty": 1
     }
   ],
   "customer": {
-    "name": "Arpita",
+    "customerId": 7,
+    "name": "Gurjeet",
     "phone": 1111111111,
     "address": "Vijay Nagar, Indore",
     "location": {
@@ -236,6 +237,7 @@ cod
     "paid": false
   }
 }
+
 
 
 ## online payment
@@ -266,6 +268,12 @@ cod
     "transactionId": "TXN12345678"
   }
 }
+
+
+## customer cancel order
+post------------http://localhost:5000/api/orders/68b924e30fc998f3fa174910/cancel-order
+68b924e30fc998f3fa174910---------order id
+authorzed token required --------access token
 
 
 ## assign order
@@ -318,7 +326,7 @@ GET-----http://localhost:5000/api/orders/delivered
 
 GET----http://localhost:5000/api/orders/delivered-missing
 
-## cancel order
+## get cancel order
 GET------------http://localhost:5000/api/orders/cancel-order
 
 ## under porcess

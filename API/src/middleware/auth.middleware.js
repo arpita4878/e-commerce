@@ -1,45 +1,47 @@
 import jwt from "jsonwebtoken";
 import User from '../model/user.schema.js'
 
- export const protect = async (req, res, next) => {
-  let token;
-  if (req.headers.authorization && req.headers.authorization.startsWith("Bearer")) {
-    try {
-      token = req.headers.authorization.split(" ")[1];
-      const decoded = jwt.verify(token, process.env.JWT_SECRET);
-      req.user = await User.findById(decoded.id).select("-password");
-      next();
-    } catch (err) {
-      return res.status(401).json({ message: "Not authorized, token failed" });
-    }
-  }
-  if (!token) return res.status(401).json({ message: "No token provided" });
-};
-
-export const adminOnly = (roles) => (req, res, next) => {
-  if (!roles.includes(req.user.role)) {
-    return res.status(403).json({ message: "Access denied" });
-  }
-  next();
-};
-
-// // middleware/auth.js
-// import jwt from "jsonwebtoken";
-// import User from "../models/user.model.js";
-
-// export async function auth(req, res, next) {
-//   try {
-//     const token = req.headers.authorization?.split(" ")[1];
-//     if (!token) return res.status(401).json({ message: "No token provided" });
-
-//     const decoded = jwt.verify(token, process.env.JWT_SECRET);
-//     const user = await User.findById(decoded.id);
-
-//     if (!user) return res.status(401).json({ message: "Invalid token" });
-
-//     req.user = user; // ✅ attach user to request
-//     next();
-//   } catch (err) {
-//     return res.status(401).json({ message: "Unauthorized" });
+//  export const protect = async (req, res, next) => {
+//   let token;
+//   if (req.headers.authorization && req.headers.authorization.startsWith("Bearer")) {
+//     try {
+//       token = req.headers.authorization.split(" ")[1];
+//       const decoded = jwt.verify(token, process.env.JWT_SECRET);
+//       req.user = await User.findById(decoded.id).select("-password");
+//       next();
+//     } catch (err) {
+//       return res.status(401).json({ message: "Not authorized, token failed" });
+//     }
 //   }
-// }
+//   if (!token) return res.status(401).json({ message: "No token provided" });
+// };
+
+// export const adminOnly = (roles) => (req, res, next) => {
+//   if (!roles.includes(req.user.role)) {
+//     return res.status(403).json({ message: "Access denied" });
+//   }
+//   next();
+// };
+
+
+
+export async function protect(req, res, next) {
+  try {
+    const token = req.headers.authorization?.split(" ")[1];
+    if (!token) {
+      return res.status(401).json({ message: "No token provided" });
+    }
+
+    const decoded = jwt.verify(token, process.env.ACCESS_SECRET);
+    const user = await User.findById(decoded.id);
+
+    if (!user) {
+      return res.status(401).json({ message: "Invalid token" });
+    }
+
+    req.user = user;
+    next();
+  } catch (err) {
+    res.status(401).json({ message: "Unauthorized" ,err});
+  }
+}

@@ -10,34 +10,35 @@ export async function createOrder(req, res, next) {
   try {
     const { branch, items, customer, payment } = req.body;
 
+    if (!req.user || !req.user._id) {
+      return res.status(401).json({ message: "Unauthorized: login required" });
+    }
+
     if (!customer?.location?.coordinates) {
       return res.status(400).json({ message: "customer.location is required (Point with [lng,lat])" });
     }
 
-  
     let itemsTotal = 0;
     const normalized = [];
 
     for (const it of items) {
-  const inv = await Inventory.findOne({ productId: it.productId, branchId: branch })
-    .populate("productId");  
-  if (!inv) return res.status(400).json({ message: "Inventory not found for product/branch" });
-  if (inv.quantity < it.qty) return res.status(400).json({ message: `Insufficient stock for ${inv.productId.name}` });
+      const inv = await Inventory.findOne({ productId: it.productId, branchId: branch })
+        .populate("productId");
+      if (!inv) return res.status(400).json({ message: "Inventory not found for product/branch" });
+      if (inv.quantity < it.qty) return res.status(400).json({ message: `Insufficient stock for ${inv.productId.name}` });
 
-  itemsTotal += inv.price * it.qty;
+      itemsTotal += inv.price * it.qty;
 
-  normalized.push({
-    productId: inv.productId._id,
-    productName: inv.productId.name,   
-    productCode: inv.productId.sku,    
-    qty: it.qty,
-    price: inv.price
-  });
+      normalized.push({
+        productId: inv.productId._id,
+        productName: inv.productId.name,
+        productCode: inv.productId.sku,
+        qty: it.qty,
+        price: inv.price
+      });
 
-  inv.quantity -= it.qty;
-  await inv.save();
-
-
+      inv.quantity -= it.qty;
+      await inv.save();
     }
 
     // --- delivery fee from zone ---
@@ -74,7 +75,14 @@ export async function createOrder(req, res, next) {
       branch,
       items: normalized,
       total,
-      customer,
+      customerId: req.user._id,     // link to logged-in user
+      customer: {
+        customerId: customer.customerId,
+        name: customer.name || req.user.name,
+        phone: customer.phone || req.user.phone,
+        address: customer.address,
+        location: customer.location
+      },
       payment,
       delivery: {
         zoneId: zone._id,
@@ -103,7 +111,6 @@ export async function createOrder(req, res, next) {
 }
 
 
-
 export async function listOrders(req, res, next) {
   try {
     const { branch, status, from, to } = req.query;
@@ -119,9 +126,9 @@ export async function listOrders(req, res, next) {
     }
 
     const orders = await Order.find(q)
-      .populate("branch", "name") 
-      .populate("items.productId", "name price") 
-      .populate("delivery_boy", "name phone") 
+      .populate("branch", "name")
+      .populate("items.productId", "name price")
+      .populate("delivery_boy", "name phone")
       .sort({ createdAt: -1 })
       .lean();
 
@@ -161,7 +168,7 @@ export async function trackOrder(req, res, next) {
 export async function reportMissingProducts(req, res, next) {
   try {
     const { orderId } = req.params;
-    const { missingProducts } = req.body; 
+    const { missingProducts } = req.body;
 
     const order = await Order.findById(orderId);
     if (!order) return res.status(404).json({ message: "Order not found" });
@@ -179,21 +186,18 @@ export async function reportMissingProducts(req, res, next) {
   }
 }
 
-
-
 export async function cancelOrderByCustomer(req, res, next) {
   try {
-    const { orderId } = req.params;
-    const { reason } = req.body; 
+    const { id } = req.params;
+    const { reason } = req.body;
     const userId = req.user._id; 
 
-    const order = await Order.findById(orderId);
+    const order = await Order.findById(id);
     if (!order) {
       return res.status(404).json({ message: "Order not found" });
     }
 
-    // Check if this order belongs to the logged-in customer
-    if (order.customer.toString() !== userId.toString()) {
+    if (order.customer.customerId !== userId) {
       return res.status(403).json({ message: "You can only cancel your own orders" });
     }
 
@@ -215,7 +219,6 @@ export async function cancelOrderByCustomer(req, res, next) {
     next(err);
   }
 }
-
 
 //delivery boy
 
@@ -253,13 +256,13 @@ export async function assignDelivery(req, res, next) {
       throw e;
     }
 
-   
+
     global._io.to(String(order.branch)).emit("deliveryAssigned", {
       orderId: order._id,
       delivery_boy: order.delivery_boy,
     });
 
-  
+
     global._io.to(`delivery_${user._id}`).emit("assignedOrder", {
       orderId: order._id,
       customer: order.customer,
@@ -280,7 +283,7 @@ export async function updateOrderStatus(req, res, next) {
     const { id } = req.params;
     const { status } = req.body;
 
-    const validStatuses = ["pending", "paid","pending_confirm", "under_process","packed", "out_for_delivery", "delivered", "cancelled"];
+    const validStatuses = ["pending", "paid", "pending_confirm", "under_process", "packed", "out_for_delivery", "delivered", "cancelled"];
     if (!validStatuses.includes(status)) {
       const e = new Error("Invalid status");
       e.status = 400;
@@ -350,7 +353,7 @@ export async function confirmDelivery(req, res, next) {
 export async function listNewOrders(req, res, next) {
   try {
     const { branch, limit } = req.query;
-    const q = { status: "new" }; 
+    const q = { status: "new" };
 
     if (branch) q.branch = branch;
 
@@ -358,8 +361,8 @@ export async function listNewOrders(req, res, next) {
       .populate("branch", "name")
       .populate("items.productId", "name price")
       .populate("delivery_boy", "name phone")
-      .sort({ createdAt: -1 }) 
-      .limit(parseInt(limit) || 10) 
+      .sort({ createdAt: -1 })
+      .limit(parseInt(limit) || 10)
       .lean();
 
     res.json({ orders });
@@ -373,7 +376,7 @@ export async function listNewOrders(req, res, next) {
 export async function listUnderProcessOrders(req, res, next) {
   try {
     const { branch, limit } = req.query;
-    const q = { status: "under_process" }; 
+    const q = { status: "under_process" };
 
     if (branch) q.branch = branch;
 
@@ -381,8 +384,8 @@ export async function listUnderProcessOrders(req, res, next) {
       .populate("branch", "name")
       .populate("items.productId", "name price")
       .populate("delivery_boy", "name phone")
-      .sort({ createdAt: -1 }) 
-      .limit(parseInt(limit) || 10) 
+      .sort({ createdAt: -1 })
+      .limit(parseInt(limit) || 10)
       .lean();
 
     res.json({ orders });
@@ -395,7 +398,7 @@ export async function listUnderProcessOrders(req, res, next) {
 export async function listGoneForDeliveryOrders(req, res, next) {
   try {
     const { branch, limit } = req.query;
-    const q = { status: "out_for_delivery" }; 
+    const q = { status: "out_for_delivery" };
 
     if (branch) q.branch = branch;
 
@@ -403,8 +406,8 @@ export async function listGoneForDeliveryOrders(req, res, next) {
       .populate("branch", "name")
       .populate("items.productId", "name price")
       .populate("delivery_boy", "name phone")
-      .sort({ createdAt: -1 }) 
-      .limit(parseInt(limit) || 10) 
+      .sort({ createdAt: -1 })
+      .limit(parseInt(limit) || 10)
       .lean();
 
     res.json({ orders });
@@ -417,7 +420,7 @@ export async function listGoneForDeliveryOrders(req, res, next) {
 export async function deliveredOrder(req, res, next) {
   try {
     const { branch, limit } = req.query;
-    const q = { status: "delivered" }; 
+    const q = { status: "delivered" };
 
     if (branch) q.branch = branch;
 
@@ -425,8 +428,8 @@ export async function deliveredOrder(req, res, next) {
       .populate("branch", "name")
       .populate("items.productId", "name price")
       .populate("delivery_boy", "name phone")
-      .sort({ createdAt: -1 }) 
-      .limit(parseInt(limit) || 10) 
+      .sort({ createdAt: -1 })
+      .limit(parseInt(limit) || 10)
       .lean();
 
     res.json({ orders });
@@ -441,7 +444,7 @@ export async function deliveredOrder(req, res, next) {
 export async function pendingConfirmOrders(req, res, next) {
   try {
     const { branch, limit } = req.query;
-    const q = { status: "pending_confirm" }; 
+    const q = { status: "pending_confirm" };
 
     if (branch) q.branch = branch;
 
@@ -449,8 +452,8 @@ export async function pendingConfirmOrders(req, res, next) {
       .populate("branch", "name")
       .populate("items.productId", "name price")
       .populate("delivery_boy", "name phone")
-      .sort({ createdAt: -1 }) 
-      .limit(parseInt(limit) || 10) 
+      .sort({ createdAt: -1 })
+      .limit(parseInt(limit) || 10)
       .lean();
 
     res.json({ orders });
@@ -462,7 +465,7 @@ export async function pendingConfirmOrders(req, res, next) {
 export async function deliveredOrdersWithMissingProducts(req, res, next) {
   try {
     const { branch, limit } = req.query;
-    const q = { status: "delivered", isMissing: true }; 
+    const q = { status: "delivered", isMissing: true };
 
     if (branch) q.branch = branch;
 
@@ -485,7 +488,7 @@ export async function deliveredOrdersWithMissingProducts(req, res, next) {
 export async function cancelledOrders(req, res, next) {
   try {
     const { branch, limit } = req.query;
-    const q = { status: "cancelled" }; 
+    const q = { status: "cancelled" };
 
     if (branch) q.branch = branch;
 
@@ -493,7 +496,7 @@ export async function cancelledOrders(req, res, next) {
       .populate("branch", "name")
       .populate("items.productId", "name price")
       .populate("delivery_boy", "name phone")
-      .sort({ createdAt: -1 }) 
+      .sort({ createdAt: -1 })
       .limit(parseInt(limit) || 10)
       .lean();
 
