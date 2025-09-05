@@ -19,6 +19,7 @@ export const forgotPassword = async (req, res) => {
 };
 
 
+
 export const resetPassword = async (req, res) => {
   const resetPasswordToken = crypto
     .createHash("sha256")

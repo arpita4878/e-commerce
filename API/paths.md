@@ -2,7 +2,7 @@
 @Rpitaseth1603-chatgpt
 
 ## for login
-http://localhost:5000/users/login
+http://localhost:5000/api/users/login
 {
     "email": "seth@gmail.com",
     "password":"123456"
@@ -10,7 +10,7 @@ http://localhost:5000/users/login
 
 
 ## register
-http://localhost:5000/users/register
+http://localhost:5000/api/users/register
 {
 	"email": "seth@gmail.com",
     "password":"123456",
@@ -20,19 +20,19 @@ http://localhost:5000/users/register
 }
 
 ## refresh token
-POST------------http://localhost:5000/users/refresh-token
+POST------------http://localhost:5000/api/users/refresh-token
 
 ## forgot-password
-http://localhost:5000/users/forgot-password
+http://localhost:5000/api/users/forgot-password
 { "password": "new1234" }
 
 it give you a token and redirect a link
-http://localhost:5000/users/reset/d3ceda3ee2275ea0a6f703100c1a7abab56bf89e771dec87b1916f101c0cb310
+http://localhost:5000/api/users/reset/d3ceda3ee2275ea0a6f703100c1a7abab56bf89e771dec87b1916f101c0cb310
 { "password": "12345678" }
 
 
 ## change-password
-http://localhost:5000/users/change-password
+http://localhost:5000/api/users/change-password
 { "userId":"seth@gmail.com",
     "oldPassword": "12345678", "newPassword": "123456" }
 
@@ -41,13 +41,13 @@ email---get from local storage
 
 
 ## delete user
-http://localhost:5000/users/delete
+http://localhost:5000/api/users/delete
 {
   "email": "test@gmail.com"
 }
 
 ## update
-http://localhost:5000/users/updateUser
+http://localhost:5000/api/users/updateUser
 {
   "condition_obj": {
     "email": "test@gmail.com"
@@ -58,13 +58,13 @@ http://localhost:5000/users/updateUser
 }
 
 ## get data 
-for all-------http://localhost:5000/users/getdata
+for all-------http://localhost:5000/api/users/getdata
 
 for specfic--------params------email---demo@gmail.com
 
 
 ## get customer using phone number 
-http://localhost:5000/users/get-customer/7999343606
+http://localhost:5000/api/users/get-customer/7999343606
 
 ----------------------------------------------------------------------------------------
 
@@ -270,6 +270,17 @@ cod
 }
 
 
+
+## fetch specific order specific user
+GET-------http://localhost:5000/api/orders/user/7/order/68b96484f8edb0edda49f690
+user/:userid/order/:orderid
+
+## fetch all order single user
+GET-------http://localhost:5000/api/orders/user/7
+user/:userid
+
+
+
 ## customer cancel order
 post------------http://localhost:5000/api/orders/68b924e30fc998f3fa174910/cancel-order
 68b924e30fc998f3fa174910---------order id
@@ -413,3 +424,81 @@ post-----http://localhost:8001/search
 {
   q:"mobile"
 }
+
+----------------------------------------------------------
+
+## add category
+post-http://localhost:5000/api/category
+{
+  "categoryName": "Fruits",
+  "isSubCategory": "true",
+  "isGramBased": true,
+  "isInList": true,
+  "categoryImage": "https://i.pinimg.com/736x/3b/26/91/3b269137fc104ccf7ff72d66f817a02e.jpg",
+   "subCategories": [
+    { "name": "Citrus" },
+    { "name": "Berries" }
+  ]
+}
+
+ 
+ if subcategory --false then subcat not added but it true then atleast one subcategpry add 
+
+
+## fetch all category
+
+GET----http://localhost:5000/api/category
+
+## fetch specific
+GET-----http://localhost:5000/api/category?id=1
+
+
+## edit category
+put--http://localhost:5000/api/category/68baaee4c072ba08d1ba8b17
+68baaee4c072ba08d1ba8b1----id category
+{
+    "categoryName":"fruits"
+}
+
+
+## add sub category 
+post---http://localhost:5000/api/category/68baaee4c072ba08d1ba8b17/subcategories
+{
+  "subCategoryName": "Tropical"
+}
+
+## edit subcategory
+put-----  http://localhost:5000/api/category/68baaee4c072ba08d1ba8b17/subcategories/68baaee4c072ba08d1ba8b18
+{
+  "newName": "Citrus Fruits"
+}
+
+
+
+----------------------------------------------------------------
+
+## brands
+
+## create
+post---http://localhost:5000/api/brand
+{
+  "brandName": "Samsung",
+  "isInList": true,
+  "image": "https://i.pinimg.com/1200x/00/cc/1b/00cc1b2d9e3d0b247b2a389abaaedb37.jpg"
+}
+
+
+## update
+put-------http://localhost:5000/api/brand/2
+{
+  "brandName": "Samsung phone",
+  "isInList": true,
+  "image": "https://i.pinimg.com/1200x/00/cc/1b/00cc1b2d9e3d0b247b2a389abaaedb37.jpg"
+}
+
+
+## brand with products
+get----http://localhost:5000/api/brand/2/products
+
+
+

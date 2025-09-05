@@ -17,6 +17,8 @@ import branchRoutes from './routes/branch.route.js';
 import orderRoutes from './routes/order.route.js';
 import deliveryZoneRoutes from './routes/delivery.route.js';
 import reportRoutes from './routes/report.route.js';
+import CategoryRouter from './routes/category.router.js'
+import BrandRouter from './routes/brand.route.js'
 
 const app = express();
 const port = process.env.PORT || 5000;
@@ -36,8 +38,9 @@ app.use(cors());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(cookieParser());
+app.use("/uploads", express.static("uploads"));
 
-app.use("/users", userRouter);
+app.use("/api/users", userRouter);
 app.use("/api/products", productRoutes);
 app.use("/api/inventory", inventoryRoutes);
 app.use("/api/search", searchRoutes);
@@ -45,7 +48,8 @@ app.use("/api/branches", branchRoutes);
 app.use("/api/orders", orderRoutes);
 app.use("/api/reports", reportRoutes);
 app.use("/delivery-zones", deliveryZoneRoutes);
-
+app.use("/api/category",CategoryRouter)
+app.use("/api/brand",BrandRouter)
 
 app.post("/notify/order", (req, res) => {
   const { branchId, orderId, status } = req.body;

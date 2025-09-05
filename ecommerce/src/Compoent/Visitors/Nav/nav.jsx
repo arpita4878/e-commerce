@@ -2,9 +2,9 @@ import { Link, useNavigate } from "react-router-dom";
 import { useEffect, useState } from "react";
 
 function Navbar() {
-  const [user, setUser] = useState<any>(null);
+  const [user, setUser] = useState(null);
   const [query, setQuery] = useState("");
-  const [suggestions, setSuggestions] = useState<string[]>([]);
+  const [suggestions, setSuggestions] = useState([]);
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -27,7 +27,7 @@ function Navbar() {
     navigate("/login");
   };
 
-  const handleSearch = async (q: string) => {
+  const handleSearch = async (q) => {
     setQuery(q);
     if (q.length < 2) {
       setSuggestions([]);
@@ -118,25 +118,46 @@ function Navbar() {
                   <Link to="/orders" className="nav-item nav-link">Orders</Link>
                   <Link to="/reports" className="nav-item nav-link">Reports</Link>
                   <Link to="/users" className="nav-item nav-link">Users</Link>
+
+                  {/* Dropdown for Product */}
+                  <li className="nav-item dropdown">
+                    <span
+                      className="nav-link dropdown-toggle"
+                      id="productDropdown"
+                      role="button"
+                      data-bs-toggle="dropdown"
+                      aria-expanded="false"
+                      style={{ cursor: "pointer" }}
+                    >
+                      Product
+                    </span>
+                    <ul className="dropdown-menu" aria-labelledby="productDropdown">
+                      <li><Link to="/product" className="dropdown-item">All Products</Link></li>
+                      <li><Link to="/brand" className="dropdown-item">Brands</Link></li>
+                      <li><Link to="/category" className="dropdown-item">Categories</Link></li>
+                    </ul>
+                  </li>
                 </>
               )}
+
               {user?.role === "branch_admin" && (
                 <>
                   <Link to="/orders" className="nav-item nav-link">Branch Orders</Link>
                   <Link to="/staff" className="nav-item nav-link">Manage Staff</Link>
                 </>
               )}
+
               {user?.role === "staff" && (
                 <>
                   <Link to="/orders" className="nav-item nav-link">My Orders</Link>
                   <Link to="/inventory" className="nav-item nav-link">Inventory</Link>
                 </>
               )}
+
               {user?.role === "delivery_boy" && (
-                <>
-                  <Link to="/my-deliveries" className="nav-item nav-link">My Deliveries</Link>
-                </>
+                <Link to="/my-deliveries" className="nav-item nav-link">My Deliveries</Link>
               )}
+
               {!user && (
                 <Link to="/register" className="nav-item nav-link">Register</Link>
               )}

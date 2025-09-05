@@ -94,6 +94,7 @@ export const register = async (req, res) => {
       email: email || null,
       phone,
       birthday,
+      password:password || null,
       nationality,
       role,
       branch,

@@ -13,6 +13,7 @@ const productSchema = new mongoose.Schema(
     taxRate: { type: Number, default: 0 },
     images: [{ type: String }], // Array of image URLs
     keywords: [{ type: String, index: true }], 
+     brandId: { type: Number, required: true },
   },
   { timestamps: true }
 );
@@ -24,6 +25,7 @@ productSchema.index({
   category: "text",
   description: "text",
   keywords:"text",
+  
 });
 
 const ProductModel = mongoose.model("Product", productSchema);

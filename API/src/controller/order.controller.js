@@ -6,6 +6,7 @@ import Branch from "../model/branch.schema.js";
 import { haversineKm } from "../lib/geo.js";
 
 
+
 export async function createOrder(req, res, next) {
   try {
     const { branch, items, customer, payment } = req.body;
@@ -48,10 +49,8 @@ export async function createOrder(req, res, next) {
     const zone = await DeliveryZone.findOne({ branchId: branch, isActive: true });
     if (!zone) return res.status(400).json({ message: "No active delivery zone configured for this branch" });
 
-    // Calculate distance
     const distanceKm = haversineKm(branchDoc.location.coordinates, customer.location.coordinates);
 
-    // Compute fee based on pricing
     let deliveryFee = 0;
     if (zone.pricing.type === "flat") {
       deliveryFee = zone.pricing.baseFee || 0;
@@ -96,6 +95,12 @@ export async function createOrder(req, res, next) {
       }
     });
 
+    // --- update user stats ---
+    await User.findByIdAndUpdate(req.user._id, {
+      $inc: { orderCount: 1, totalOrderAmount: total },
+      $set: { lastOrderDate: new Date() }
+    });
+
     // Notify branch in real-time
     global._io.to(String(branch)).emit("newOrder", {
       orderId: order._id,
@@ -137,6 +142,53 @@ export async function listOrders(req, res, next) {
     next(err);
   }
 }
+
+
+
+export async function getOrdersByUser(req, res, next) {
+  try {
+    const { userId } = req.params;
+
+    const orders = await Order.find({ "customer.customerId": userId })
+      .populate("branch", "name")
+      .populate("items.productId", "name price")
+      .sort({ createdAt: -1 })
+      .lean();
+
+    if (!orders.length) {
+      return res.status(404).json({ message: "No orders found for this user" });
+    }
+
+    res.json({ orders });
+  } catch (err) {
+    next(err);
+  }
+}
+
+  
+export async function getOrderByUserAndId(req, res, next) {
+  try {
+    const { userId, orderId } = req.params;
+
+    const order = await Order.findOne({
+      _id: orderId,
+      "customer.customerId": userId
+    })
+      .populate("branch", "name")
+      .populate("items.productId", "name price")
+      .lean();
+
+    if (!order) {
+      return res.status(404).json({ message: "Order not found for this user" });
+    }
+
+    res.json({ order });
+  } catch (err) {
+    next(err);
+  }
+}
+
+
 
 
 export async function trackOrder(req, res, next) {
