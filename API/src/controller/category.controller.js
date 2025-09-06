@@ -1,11 +1,14 @@
 import Category from "../model/category.schema.js";
+import fs from 'fs'
 
-// Create Category
 export const createCategory = async (req, res) => {
   try {
-    const { categoryName, isSubCategory, subCategories, isGramBased, isInList, categoryImage } = req.body;
+    let { categoryName, isSubCategory, subCategories, isGramBased, isInList } = req.body;
 
-    // Validation: if isSubCategory = true, subCategories must exist
+    isSubCategory = isSubCategory === "true" || isSubCategory === true;
+    isGramBased   = isGramBased === "true" || isGramBased === true;
+    isInList      = isInList === "true" || isInList === true;
+
     if (isSubCategory && (!subCategories || subCategories.length === 0)) {
       return res.status(400).json({
         status: false,
@@ -13,7 +16,6 @@ export const createCategory = async (req, res) => {
       });
     }
 
-    // Validation: if isSubCategory = false, subCategories must be empty
     if (!isSubCategory && subCategories && subCategories.length > 0) {
       return res.status(400).json({
         status: false,
@@ -21,8 +23,13 @@ export const createCategory = async (req, res) => {
       });
     }
 
+ 
+    let categoryImage = null;
+    if (req.file) {
+      categoryImage = req.file.path;
+    }
+
     const newCategory = await Category.create({
-    
       categoryName,
       isSubCategory,
       subCategories: subCategories || [],
@@ -40,6 +47,8 @@ export const createCategory = async (req, res) => {
     res.status(500).json({ status: false, message: error.message });
   }
 };
+
+
 
 // Get all categories
 export const getAllCategories = async (req, res) => {
@@ -63,18 +72,20 @@ export const getCategoryById = async (req, res) => {
   }
 };
 
-// Update category
+
+
 export const updateCategory = async (req, res) => {
   try {
     const { isSubCategory, subCategories } = req.body;
 
-    // Revalidate like in create
+    
     if (isSubCategory && (!subCategories || subCategories.length === 0)) {
       return res.status(400).json({
         status: false,
         message: "At least one subcategory is required when 'isSubCategory' is true",
       });
     }
+
     if (!isSubCategory && subCategories && subCategories.length > 0) {
       return res.status(400).json({
         status: false,
@@ -82,14 +93,41 @@ export const updateCategory = async (req, res) => {
       });
     }
 
-    const updatedCategory = await Category.findByIdAndUpdate(req.params.id, req.body, { new: true });
-    if (!updatedCategory) return res.status(404).json({ status: false, message: "Category not found" });
+    const category = await Category.findById(req.params.id);
+    if (!category) {
+      return res.status(404).json({ status: false, message: "Category not found" });
+    }
 
-    res.status(200).json({ status: true, message: "Category updated", data: updatedCategory });
+   
+    if (req.file) {
+      // delete old image if exists
+      if (category.categoryImage && fs.existsSync(category.categoryImage)) {
+        fs.unlinkSync(category.categoryImage);
+      }
+      req.body.categoryImage = req.file.path; 
+    }
+
+   
+    const updatedCategory = await Category.findByIdAndUpdate(
+      req.params.id,
+      req.body,
+      { new: true }
+    );
+
+    res.status(200).json({
+      status: true,
+      message: "Category updated successfully",
+      data: updatedCategory,
+    });
   } catch (error) {
     res.status(500).json({ status: false, message: error.message });
   }
 };
+
+
+
+
+
 
 // Delete category
 export const deleteCategory = async (req, res) => {

@@ -6,8 +6,7 @@ import {
   getProduct,
   listProducts
 } from "../controller/product.controller.js";
-import { protect } from "../middleware/auth.middleware.js";
-import { adminOnly } from "../middleware/role.middleware.js";
+
 const router = express.Router();
 
 //router.post("/", protect, adminOnly(["superadmin"]), createProduct);

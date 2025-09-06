@@ -1,12 +1,13 @@
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
-import { __brandapiurl } from "../../../../API_URL";
+import { __brandapiurl, backendBaseUrl } from "../../../../API_URL";
 import { toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 
 export default function BrandList() {
   const [brands, setBrands] = useState([]);
   const [deleteId, setDeleteId] = useState(null);
+  const [searchTerm, setSearchTerm] = useState("");
 
   // New brand state
   const [newBrand, setNewBrand] = useState({
@@ -110,13 +111,29 @@ export default function BrandList() {
     }
   };
 
+  // 🔍 Filter brands by search term
+  const filteredBrands = brands.filter((brand) =>
+    brand.brandName.toLowerCase().includes(searchTerm.toLowerCase())
+  );
+
   return (
     <div className="container mt-4">
-      <h2 className="mb-4 text-center fw-bold"> Brand Management</h2>
+      <h2 className="mb-4 text-center fw-bold">Brand Management</h2>
+
+      {/* 🔍 SEARCH BAR */}
+      <div className="mb-4">
+        <input
+          type="text"
+          className="form-control"
+          placeholder="Search by brand name..."
+          value={searchTerm}
+          onChange={(e) => setSearchTerm(e.target.value)}
+        />
+      </div>
 
       {/* ADD BRAND FORM */}
-      <div className="card shadow-sm mb-4 p-4">
-        <h4 className="mb-3"> Add New Brand</h4>
+      <div className="card shadow-sm mb-5 p-4">
+        <h4 className="mb-3 fw-bold"> Add New Brand</h4>
         <form onSubmit={addBrand} encType="multipart/form-data">
           <div className="row g-3">
             <div className="col-md-4">
@@ -153,6 +170,7 @@ export default function BrandList() {
               />
             </div>
           </div>
+
           {preview && (
             <div className="mt-3 text-center">
               <img
@@ -163,71 +181,94 @@ export default function BrandList() {
                   height: "120px",
                   objectFit: "cover",
                   borderRadius: "8px",
+                  border: "1px solid #ddd",
                 }}
               />
             </div>
           )}
-          <button type="submit" className="btn btn-success mt-3">
+
+          <button type="submit" className="btn btn-success mt-3 px-4">
             Add Brand
           </button>
         </form>
       </div>
 
       {/* BRAND LIST */}
-      <table className="table table-bordered table-hover align-middle shadow-sm w-100">
-        <thead className="table-dark text-center">
-          <tr>
-            <th style={{ width: "25%" }}>Brand</th>
-            <th style={{ width: "15%" }}>In List</th>
-            <th style={{ width: "20%" }}>Action</th>
-          </tr>
-        </thead>
-        <tbody>
-          {brands.map((brand) => (
-            <tr key={brand._id} className="text-center">
-              <td className="fw-bold">{brand.brandName}</td>
-
-              {/* Toggle Switch */}
-              <td>
-                <div className="form-check form-switch d-flex justify-content-center">
-                  <input
-                    className="form-check-input"
-                    type="checkbox"
-                    checked={brand.isInList}
-                    onChange={() => toggleInList(brand._id, brand.isInList)}
-                  />
-                </div>
-              </td>
-
-              {/* Action buttons */}
-              <td>
-                <div className="d-flex justify-content-center gap-2">
-                  <Link
-                    to={`/brand/${brand._id}`}
-                    className="btn btn-sm btn-outline-primary"
-                  >
-                    ✏ Edit
-                  </Link>
-                  <button
-                    onClick={() => setDeleteId(brand._id)}
-                    className="btn btn-sm btn-outline-danger"
-                  >
-                    🗑 Delete
-                  </button>
-                </div>
-              </td>
-            </tr>
-          ))}
-
-          {brands.length === 0 && (
+      <div className="card shadow-sm p-4">
+        <h4 className="mb-3 fw-bold">Brand List</h4>
+        <table className="table table-bordered table-hover align-middle w-100">
+          <thead className="table-dark text-center">
             <tr>
-              <td colSpan={3} className="text-center text-muted py-4">
-                No brands found.
-              </td>
+              <th style={{ width: "30%" }}>Brand</th>
+              <th style={{ width: "15%" }}>In List</th>
+              <th style={{ width: "25%" }}>Action</th>
             </tr>
-          )}
-        </tbody>
-      </table>
+          </thead>
+          <tbody>
+            {filteredBrands.map((brand) => (
+              <tr key={brand._id} className="text-center">
+                {/* Brand with Image */}
+                <td className="fw-bold text-start">
+                  <div className="d-flex align-items-center gap-3">
+                    {brand.image && (
+                      <img
+                        src={backendBaseUrl + brand.image}
+                        alt={brand.brandName}
+                        style={{
+                          width: "70px",
+                          height: "50px",
+                          objectFit: "cover",
+                          borderRadius: "5px",
+                          border: "1px solid #ddd",
+                        }}
+                      />
+                    )}
+                    {brand.brandName}
+                  </div>
+                </td>
+
+                {/* Toggle Switch */}
+                <td>
+                  <div className="form-check form-switch d-flex justify-content-center">
+                    <input
+                      className="form-check-input"
+                      type="checkbox"
+                      checked={brand.isInList}
+                      onChange={() => toggleInList(brand._id, brand.isInList)}
+                    />
+                  </div>
+                </td>
+
+                {/* Action buttons */}
+                <td>
+                  <div className="d-flex justify-content-center gap-2">
+                    <Link
+                      to={`/brand/${brand._id}`}
+                      className="btn btn-sm btn-outline-primary"
+                    >
+                      ✏ Edit
+                    </Link>
+                    <button
+                      onClick={() => setDeleteId(brand._id)}
+                      className="btn btn-sm btn-outline-danger"
+                    >
+                      🗑 Delete
+                    </button>
+                  </div>
+                </td>
+              </tr>
+            ))}
+
+            {filteredBrands.length === 0 && (
+              <tr>
+                <td colSpan={3} className="text-center text-muted py-4">
+                  No brands found.
+                </td>
+              </tr>
+            )}
+          </tbody>
+        </table>
+      </div>
 
       {/* DELETE CONFIRM MODAL */}
       {deleteId && (

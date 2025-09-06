@@ -7,7 +7,11 @@ import cors from "cors";
 import { createServer } from "http";
 import { Server } from "socket.io";
 import { connectDB } from "./config/db.js";
+import { fileURLToPath } from 'url';
+import path from 'path'
 
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 import userRouter from "./routes/user.route.js";
 import productRoutes from "./routes/product.route.js";
@@ -19,6 +23,7 @@ import deliveryZoneRoutes from './routes/delivery.route.js';
 import reportRoutes from './routes/report.route.js';
 import CategoryRouter from './routes/category.router.js'
 import BrandRouter from './routes/brand.route.js'
+
 
 const app = express();
 const port = process.env.PORT || 5000;
@@ -38,7 +43,7 @@ app.use(cors());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(cookieParser());
-app.use("/uploads", express.static("uploads"));
+app.use("/uploads", express.static(path.join(process.cwd(), "uploads")));
 
 app.use("/api/users", userRouter);
 app.use("/api/products", productRoutes);

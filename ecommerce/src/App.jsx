@@ -13,6 +13,10 @@ import BrandList from './Compoent/SuperAdmin/Brands/Brand.jsx'
 import EditBrand from './Compoent/SuperAdmin/Brands/editBrand.jsx'
 
 import { ToastContainer } from "react-toastify";
+import CategoryList from './Compoent/SuperAdmin/Category/category.jsx'
+import AddCategory from './Compoent/SuperAdmin/Category/addCategory.jsx'
+import CategoryDetail from './Compoent/SuperAdmin/Category/categoryDetail.jsx'
+import EditCategory from './Compoent/SuperAdmin/Category/edit.jsx'
 
 function App() {
 
@@ -29,13 +33,17 @@ function App() {
         <Route path='/products' element={<ProductList />}></Route>
         <Route path='/orders' element={<OrdersDashboard />}></Route>
         <Route path='/users' element={<UserDashboard />}></Route>
-        <Route path='/brand' element={<BrandList/>}></Route>
-        <Route path='/brands/:id' element={<EditBrand />}></Route>
-        
+        <Route path='/brand' element={<BrandList />}></Route>
+        <Route path='/brand/:id' element={<EditBrand />}></Route>
+        <Route path='/category' element={<CategoryList />}></Route>
+        <Route path="/category" element={<CategoryList />} />
+        <Route path="/category/add" element={<AddCategory />} />
+        <Route path="/category/edit/:id" element={<EditCategory />} />
+
         {/* <Route path='/branch-dashboard' element={<ManagerHome/>}></Route> */}
       </Routes>
 
-   <ToastContainer position="top-right" autoClose={2000} />
+      <ToastContainer position="top-right" autoClose={2000} />
     </>
   )
 }

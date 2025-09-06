@@ -8,6 +8,7 @@ import {
 
 } from "../controller/category.controller.js";
 
+import { upload } from "../middleware/upload.js";
 
 import {
     addSubCategory,
@@ -17,10 +18,10 @@ import {
 
 const router = express.Router();
 
-router.post("/", createCategory);
+router.post("/",upload.single("categoryImage"),  createCategory);
 router.get("/", getAllCategories);
 router.get("/:id", getCategoryById);
-router.put("/:id", updateCategory);
+router.put("/:id",upload.single("categoryImage"),  updateCategory);
 router.delete("/:id", deleteCategory);
 
 

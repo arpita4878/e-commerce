@@ -429,7 +429,7 @@ post-----http://localhost:8001/search
 
 ## add category
 post-http://localhost:5000/api/category
-{
+formdata----{
   "categoryName": "Fruits",
   "isSubCategory": "true",
   "isGramBased": true,
@@ -438,7 +438,8 @@ post-http://localhost:5000/api/category
    "subCategories": [
     { "name": "Citrus" },
     { "name": "Berries" }
-  ]
+  ],
+  categoryImage:....
 }
 
  
@@ -456,10 +457,16 @@ GET-----http://localhost:5000/api/category?id=1
 ## edit category
 put--http://localhost:5000/api/category/68baaee4c072ba08d1ba8b17
 68baaee4c072ba08d1ba8b1----id category
-{
-    "categoryName":"fruits"
+raw-----{
+  
+  "isSubCategory": "true",
+  "isGramBased": true,
+  "isInList": true,
+   "subCategories": [
+    { "name": "Oppo" },
+    { "name": "Vivo" }
+  ]
 }
-
 
 ## add sub category 
 post---http://localhost:5000/api/category/68baaee4c072ba08d1ba8b17/subcategories
@@ -502,3 +509,5 @@ get----http://localhost:5000/api/brand/2/products
 
 
 
+## fecth
+get----http://localhost:5000/api/brand/2

@@ -21,7 +21,7 @@ router.post("/", upload.single("image"), createBrand);
 router.get("/", getBrands);
 router.get("/:id", getBrandById);
 router.get("/:id/products", getBrandWithProducts);
-router.put("/:id", updateBrand);
+router.put("/:id", upload.single("image"),updateBrand);
 router.delete("/:id", deleteBrand);
 
 export default router;
