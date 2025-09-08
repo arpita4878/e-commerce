@@ -116,7 +116,7 @@ function Navbar() {
               {user?.role === "super_admin" && (
                 <>
                   <Link to="/orders" className="nav-item nav-link">Orders</Link>
-                  <Link to="/reports" className="nav-item nav-link">Reports</Link>
+                  <Link to="/branch" className="nav-item nav-link">Branch</Link>
                   <Link to="/users" className="nav-item nav-link">Users</Link>
 
                   {/* Dropdown for Product */}

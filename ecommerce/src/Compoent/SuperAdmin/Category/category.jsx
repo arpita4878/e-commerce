@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { __categoryapiurl } from "../../../../API_URL";
+import { backendBaseUrl } from "../../../../API_URL";
 
 export default function CategoryList() {
   const [categories, setCategories] = useState([]);
@@ -40,7 +41,7 @@ export default function CategoryList() {
       <div className="d-flex justify-content-between align-items-center mb-3">
         <h2 className="fw-bold">Category Management</h2>
         <Link to="/category/add" className="btn btn-success">
-           Add Category
+          Add Category
         </Link>
       </div>
 
@@ -71,7 +72,7 @@ export default function CategoryList() {
               <td>
                 {cat.categoryImage && (
                   <img
-                    src={cat.categoryImage}
+                    src={`${backendBaseUrl}${cat.categoryImage}`}
                     alt={cat.categoryName}
                     style={{
                       width: "60px",
@@ -80,6 +81,7 @@ export default function CategoryList() {
                       borderRadius: "6px",
                     }}
                   />
+
                 )}
               </td>
               <td>
@@ -88,7 +90,7 @@ export default function CategoryList() {
                     to={`/category/edit/${cat._id}`}
                     className="btn btn-sm btn-outline-primary"
                   >
-                     Edit
+                    Edit
                   </Link>
                   <button
                     onClick={() => setDeleteId(cat._id)}

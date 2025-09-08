@@ -2,25 +2,26 @@ import mongoose from "mongoose";
 
 const productSchema = new mongoose.Schema(
   {
-    name: { type: String, required: true, index: true },
-    sku: { type: String, required: true, unique: true, index: true },
+    productName: { type: String, required: true, index: true },
+    barcode: { type: String, required: true, unique: true, index: true },
     description: { type: String },
-    brand: { type: String, index: true },
-    category: { type: String, index: true },
+    categoryId: { type: Number, required:true},
     attributes: { type: Map, of: String }, // e.g. color:size
-    isActive: { type: Boolean, default: true },
     basePrice: { type: Number, default: 0 },
-    taxRate: { type: Number, default: 0 },
-    images: [{ type: String }], // Array of image URLs
+    Quantity: { type: Number, default: 0 },
+    images: [{ type: String }], // Array of image 
     keywords: [{ type: String, index: true }], 
-     brandId: { type: Number, required: true },
+    brandId: { type: Number, required: true },
+    storeId:[{type:Number, required: true }],
+    stock: { type: Number, default: 0 },   
+    display: { type: Boolean, default: true }
   },
   { timestamps: true }
 );
 
 productSchema.index({
   name: "text",
-  sku: "text",
+  barcode: "text",
   brand: "text",
   category: "text",
   description: "text",

@@ -1,111 +1,115 @@
 import { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { toast } from "react-toastify";
-import { __categoryapiurl } from "../../../../API_URL";
+import { __categoryapiurl, backendBaseUrl } from "../../../../API_URL";
 
 export default function EditCategory() {
   const { id } = useParams();
   const navigate = useNavigate();
+
   const [category, setCategory] = useState({
-categoryName:"",
-isSubCategory:"",
-subCategories :"",
-isGramBased:false,
-isInList:false,
-categoryImagefile:null
+    categoryName: "",
+    isSubCategory: false,
+    subCategories: [],
+    isGramBased: false,
+    isInList: false,
+    categoryImage: null, 
   });
   const [preview, setPreview] = useState(null);
   const [subCatInput, setSubCatInput] = useState("");
 
-  // Fetch category
   const fetchCategory = async () => {
-    try {
-      const res = await fetch(`${__categoryapiurl}?id=${id}`);
-      const data = await res.json();
-      setCategory({
-        categoryName: data.data.categoryName,
-        isSubCategory:data.data.isSubCategory,
-        subCategories :data.data.subCategories ,
-        isGramBased:data.data.isGramBased,
-        isInList:data.data.isInList,
-        categoryImagefile:null
-     } );
-      console.log(data.data);
-      
-      setPreview(data.data.image || null)
-    } catch (err) {
-      toast.error("Failed to load category");
-    }
-  };
+  try {
+    const res = await fetch(`${__categoryapiurl}${id}`); 
+    const data = await res.json();
+
+    setCategory({
+      categoryName: data.data.categoryName,
+      isSubCategory: data.data.isSubCategory,
+      subCategories: data.data.subCategories,
+      isGramBased: data.data.isGramBased,
+      isInList: data.data.isInList,
+      categoryImage: null,
+    });
+
+    setPreview(data.data.categoryImage 
+      ? `http://localhost:5000/${data.data.categoryImage}`
+      : null);
+  } catch (err) {
+    toast.error("Failed to load category");
+  }
+};
 
   useEffect(() => {
     fetchCategory();
   }, [id]);
 
-  // Handle file change
+ 
   const handleFileChange = (e) => {
     const file = e.target.files[0];
     setCategory({ ...category, categoryImage: file });
-    setPreview(URL.createObjectURL(file));
+    setPreview(URL.createObjectURL(file)); 
   };
 
-  // Add subcategory locally
+ 
   const addSubCategory = () => {
     if (subCatInput.trim()) {
       setCategory({
         ...category,
-        subCategories: [...(category.subCategories || []), { name: subCatInput }],
+        subCategories: [
+          ...category.subCategories,
+          { name: subCatInput.trim() },
+        ],
       });
       setSubCatInput("");
     }
   };
 
-  // Delete subcategory locally
+ 
   const deleteSubCategory = (index) => {
     const updated = category.subCategories.filter((_, i) => i !== index);
     setCategory({ ...category, subCategories: updated });
   };
 
-  // Submit form
+
   const handleSubmit = async (e) => {
-    e.preventDefault();
+  e.preventDefault();
 
-    try {
-      const formData = new FormData();
-      formData.append("categoryName", category.categoryName);
-      formData.append("isSubCategory", category.isSubCategory.toString());
-      formData.append("isGramBased", category.isGramBased.toString());
-      formData.append("isInList", category.isInList.toString());
+  try {
+    const formData = new FormData();
+    formData.append("categoryName", category.categoryName);
+    formData.append("isSubCategory", category.isSubCategory.toString());
+    formData.append("isGramBased", category.isGramBased.toString());
+    formData.append("isInList", category.isInList.toString());
 
-      if (category.categoryImage instanceof File) {
-        formData.append("categoryImage", category.categoryImage);
-      }
-
-      if (category.isSubCategory) {
-        formData.append("subCategories", JSON.stringify(category.subCategories));
-      }
-
-      const res = await fetch(`${__categoryapiurl}${id}`, {
-        method: "PUT",
-        body: formData,
-      });
-
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.message || "Update failed");
-
-      toast.success("Category updated successfully!");
-      navigate("/category");
-    } catch (err) {
-      toast.error(err.message);
+    if (category.categoryImage instanceof File) {
+      formData.append("categoryImage", category.categoryImage);
     }
-  };
 
-  if (!category) return <div className="text-center mt-5">Loading...</div>;
+    if (category.isSubCategory) {
+      formData.append("subCategories", JSON.stringify(category.subCategories));
+    }
+
+    const res = await fetch(`${__categoryapiurl}${id}`, {
+      method: "PUT",
+      body: formData,
+    });
+
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.message || "Update failed");
+
+    toast.success("Category updated successfully!");
+    navigate("/category");
+  } catch (err) {
+    console.error(err);
+    toast.error(err.message);
+  }
+};
 
   return (
     <div className="container mt-4">
       <div className="card shadow p-4">
-        <h2 className="fw-bold mb-3 text-primary">✏ Edit Category</h2>
+        <h2 className="fw-bold mb-3 text-primary"> Edit Category</h2>
         <form onSubmit={handleSubmit} encType="multipart/form-data">
           {/* Category Name */}
           <div className="mb-3">
@@ -171,7 +175,8 @@ categoryImagefile:null
               <img
                 src={preview}
                 alt="preview"
-                style={{ width: "180px", borderRadius: "8px" }}
+                className="img-thumbnail shadow-sm"
+                style={{ width: "200px", height: "130px", objectFit: "cover" }}
               />
             </div>
           )}
@@ -186,6 +191,7 @@ categoryImagefile:null
                   className="form-control"
                   value={subCatInput}
                   onChange={(e) => setSubCatInput(e.target.value)}
+                  placeholder="Enter subcategory name"
                 />
                 <button
                   type="button"
@@ -201,13 +207,13 @@ categoryImagefile:null
                     key={i}
                     className="list-group-item d-flex justify-content-between align-items-center"
                   >
-                    {sub.name}
+                    {sub.name || sub} {/* handle both {name:""} or plain string */}
                     <button
                       type="button"
                       className="btn btn-sm btn-outline-danger"
                       onClick={() => deleteSubCategory(i)}
                     >
-                      🗑 Delete
+                      🗑
                     </button>
                   </li>
                 ))}
@@ -218,14 +224,14 @@ categoryImagefile:null
           {/* Buttons */}
           <div className="mt-4">
             <button type="submit" className="btn btn-primary">
-              💾 Save Changes
+               Save Changes
             </button>
             <button
               type="button"
               className="btn btn-secondary ms-2"
               onClick={() => navigate("/category")}
             >
-              ❌ Cancel
+               Cancel
             </button>
           </div>
         </form>

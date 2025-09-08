@@ -1,22 +1,30 @@
 import Product from "../model/product.schema.js";
 import Inventory from "../model/inventory.js";
-
+import fs from 'fs'
 export const createProduct = async (req, res) => {
   try {
+    // req.files is an array of files
+    const images = req.files?.map(f => f.path) || [];
+
+    console.log("BODY:", req.body);
+    console.log("FILES:", req.files);
+    
     const product_details = {
-      name: req.body.name,
-      sku: req.body.sku,
-      brand: req.body.brand,
-      category: req.body.category,
+      productName: req.body.productName,
+      barcode: req.body.barcode,
+      brandId: req.body.brandId,
+      categoryId: req.body.categoryId,
       description: req.body.description,
       basePrice: req.body.basePrice,
-      taxRate: req.body.taxRate,
-      attributes: req.body.attributes ,
-      isActive: req.body.isActive,
-      images: req.body.images || [], 
+      quantity: req.body.quantity,
+      attributes: req.body.attributes,
+      images: images.length > 0 ? images : req.body.images || [],
       info: new Date(),
-      keywords:req.body.keywords || [],
-        };
+      keywords: req.body.keywords?.split(",") || [], // handle comma-separated
+      storeId: Array.isArray(req.body.storeId) ? req.body.storeId : [req.body.storeId],
+      stock: req.body.stock,
+      display: req.body.display
+    };
 
     const product = await Product.create(product_details);
     res.status(201).json(product);
@@ -29,8 +37,17 @@ export const createProduct = async (req, res) => {
 
 export const updateProduct = async (req, res) => {
   try {
-    const updated = await Product.findByIdAndUpdate(req.params.id, req.body, { new: true });
-    if (!updated) return res.status(404).json({ message: "Product not found" });
+ const product = await Product.findById(req.params.id);
+let images = product.images || [];
+if (req.files?.length > 0) {
+  images = [...images, ...req.files.map(f => f.path)]; 
+}
+const updated = await Product.findByIdAndUpdate(
+  req.params.id,
+  { ...req.body, images },
+  { new: true }
+);
+
     res.json(updated);
   } catch (e) {
     res.status(400).json({ message: e.message });

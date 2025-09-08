@@ -5,10 +5,22 @@ export const createCategory = async (req, res) => {
   try {
     let { categoryName, isSubCategory, subCategories, isGramBased, isInList } = req.body;
 
+   
     isSubCategory = isSubCategory === "true" || isSubCategory === true;
     isGramBased   = isGramBased === "true" || isGramBased === true;
     isInList      = isInList === "true" || isInList === true;
 
+    if (typeof subCategories === "string") {
+      try {
+        subCategories = JSON.parse(subCategories);
+      } catch (err) {
+        return res.status(400).json({
+          status: false,
+          message: "Invalid subCategories format. Must be valid JSON array.",
+        });
+      }
+    } 
+   
     if (isSubCategory && (!subCategories || subCategories.length === 0)) {
       return res.status(400).json({
         status: false,
@@ -23,12 +35,13 @@ export const createCategory = async (req, res) => {
       });
     }
 
- 
+    
     let categoryImage = null;
     if (req.file) {
       categoryImage = req.file.path;
     }
 
+    
     const newCategory = await Category.create({
       categoryName,
       isSubCategory,
@@ -50,7 +63,7 @@ export const createCategory = async (req, res) => {
 
 
 
-// Get all categories
+
 export const getAllCategories = async (req, res) => {
   try {
     const categories = await Category.find();
@@ -60,7 +73,7 @@ export const getAllCategories = async (req, res) => {
   }
 };
 
-// Get single category by ID
+
 export const getCategoryById = async (req, res) => {
   try {
     const category = await Category.findById(req.params.id);
@@ -76,41 +89,69 @@ export const getCategoryById = async (req, res) => {
 
 export const updateCategory = async (req, res) => {
   try {
-    const { isSubCategory, subCategories } = req.body;
+    let { isSubCategory, subCategories, isGramBased, isInList } = req.body;
 
+    // Convert string booleans to real booleans
+    isSubCategory = isSubCategory === "true" || isSubCategory === true;
+    isGramBased   = isGramBased === "true" || isGramBased === true;
+    isInList      = isInList === "true" || isInList === true;
+
+    // Parse subCategories if it's a string
+    if (subCategories && typeof subCategories === "string") {
+      try {
+        subCategories = JSON.parse(subCategories);
+      } catch (err) {
+                return res.status(400).json({
+                    status: false,
+                    message: "Invalid subCategories format. Must be JSON array.",
+                });
+            }
+      }
     
+
+    // Validation rules
     if (isSubCategory && (!subCategories || subCategories.length === 0)) {
       return res.status(400).json({
         status: false,
-        message: "At least one subcategory is required when 'isSubCategory' is true",
+        message:
+          "At least one subcategory is required when 'isSubCategory' is true",
       });
     }
 
     if (!isSubCategory && subCategories && subCategories.length > 0) {
       return res.status(400).json({
         status: false,
-        message: "Subcategories should not be added when 'isSubCategory' is false",
+        message:
+          "Subcategories should not be added when 'isSubCategory' is false",
       });
     }
 
     const category = await Category.findById(req.params.id);
     if (!category) {
-      return res.status(404).json({ status: false, message: "Category not found" });
+      return res
+        .status(404)
+        .json({ status: false, message: "Category not found" });
     }
 
-   
+    // Replace image if a new one is uploaded
     if (req.file) {
-      // delete old image if exists
       if (category.categoryImage && fs.existsSync(category.categoryImage)) {
         fs.unlinkSync(category.categoryImage);
       }
-      req.body.categoryImage = req.file.path; 
+      req.body.categoryImage = req.file.path;
     }
 
-   
+    // Perform update
     const updatedCategory = await Category.findByIdAndUpdate(
       req.params.id,
-      req.body,
+      {
+        categoryName: req.body.categoryName ?? category.categoryName,
+        isSubCategory,
+        isGramBased,
+        isInList,
+        subCategories: subCategories || [],
+        categoryImage: req.body.categoryImage ?? category.categoryImage,
+      },
       { new: true }
     );
 
@@ -129,7 +170,6 @@ export const updateCategory = async (req, res) => {
 
 
 
-// Delete category
 export const deleteCategory = async (req, res) => {
   try {
     const deleted = await Category.findByIdAndDelete(req.params.id);

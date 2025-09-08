@@ -73,26 +73,31 @@ http://localhost:5000/api/users/get-customer/7999343606
 
 ## add product globally super admin 
 post-----http://localhost:5000/api/products
-
+send data from formdata
 {
   "name": "Samsung Galaxy S24 Ultra",
-  "sku": "SG-S24U-001",
-  "brand": "Samsung",
-  "category": "Smartphones",
+  "barcode": "SG-S24U-001",
+  "brandId": 1,
+  "categoryId": 1,
   "description": "The Samsung Galaxy S24 Ultra features a 6.8-inch Dynamic AMOLED 2X display, Snapdragon 8 Gen 3 processor, up to 12GB RAM, and 200MP camera for flagship performance and photography.",
   "basePrice": 124999,
-  "taxRate": 18,
+  "quantity": 180gm,
   "attributes": {
     "color": "Phantom Black",
     "storage": "256GB",
     "ram": "12GB",
     "battery": "5000mAh"
   },
-  "isActive": true
+  "display": true,
+  "stock":15
   keywords:{
     "mobile",
     "phone"
-  }
+  },
+  images:{
+    select from folder
+  },
+  storeId:1
 }
 
 
@@ -139,12 +144,42 @@ post----http://localhost:5000/api/inventory/mine
 ## for branch create
 post-------------http://localhost:5000/api/branches
 {
-  "name": "Main Branch",
-  "code": "MB001",
-  "address": "xyz",
+  "branchName": "Downtown Branch",
+  "code": "B001",
+  "address": "Main Street",
   "location": { "type": "Point", "coordinates": [77.5946, 12.9716] },
-  "isActive": true
+  "stores": [
+    {
+      "name": "Store A",
+      "isOpen": true,
+      "openTime": "09:00",
+      "closeTime": "21:00",
+      "zones": [
+        {
+          "name": "Zone 1",
+          "polygon": {
+            "type": "Polygon",
+            "coordinates": [
+              [
+                [77.5946, 12.9716],
+                [77.5950, 12.9720],
+                [77.5960, 12.9710],
+                [77.5946, 12.9716]
+              ]
+            ]
+          },
+          "freeDeliveryAbove": 500,
+          "minOrderValue": 100,
+          "deliveryTime": "30-45 mins",
+          "deliveryCharge": 20,
+          "deliveryChargeAfterKm": 10,
+          "paymentMethods": ["card","cash","upi"]
+        }
+      ]
+    }
+  ]
 }
+
 
 
 ## GET-------get all branch
@@ -163,6 +198,106 @@ PUT----------http://localhost:5000/api/branches/68b56cbd4071c4277f97522f
 ## delete branch
 delete-----http://localhost:5000/api/branches/68b56cbd4071c4277f975222
 68b56cbd4071c4277f975222---branch id
+
+
+## add store
+post---http://localhost:5000/api/branches/:branchId/stores
+{
+  "name": "Store 1",
+  "isOpen": true,
+  "openTime": "09:00",
+  "closeTime": "21:00"
+}
+
+## Delete Store
+
+Method: DELETE
+
+URL: http://localhost:5000/api/branches/:branchId/stores/:storeId
+
+
+## upadte store
+http://localhost:5000/api/branches/:branchId/stores/:storeId
+put----http://localhost:5000/api/branches/68beb7a5308013923b7ff753/stores/68bec6e7d020c8016aff3ea3
+
+{
+  "name": "Updated Store Name",
+  "isOpen": false
+}
+
+
+## Add Zone
+
+Method: POST
+
+URL: http://localhost:5000/api/branches/:branchId/stores/:storeId/zones
+
+Body (JSON):
+{
+  "name": "Zone 1",
+  "polygon": {
+    "type": "Polygon",
+    "coordinates": [
+      [
+        [77.5946, 12.9716],
+        [77.5950, 12.9718],
+        [77.5948, 12.9722],
+        [77.5946, 12.9716]
+      ]
+    ]
+  },
+  "freeDeliveryAbove": 500,
+  "minOrderValue": 100,
+  "deliveryTime": "30-45 mins",
+  "deliveryCharge": 50,
+  "deliveryChargeAfterKm": 10,
+  "paymentMethods": ["card","cash"]
+}
+
+
+## Update Zone
+
+Method: PUT
+
+URL: http://localhost:5000/api/branches/:branchId/stores/:storeId/zones/:zoneId
+
+Body (JSON):
+{
+  "name": "Updated Zone Name",
+  "deliveryCharge": 60
+}
+
+## Delete Zone
+
+Method: DELETE
+
+URL: http://localhost:5000/api/branches/:branchId/stores/:storeId/zones/:zoneId
+
+
+
+## Testing Delivery Availability
+
+Method: POST
+
+URL: http://localhost:5000/api/branches/:branchId/stores/:storeId/check-delivery (or your custom route)
+
+Body (JSON):
+
+{
+  "lat": 12.9717,
+  "lng": 77.5948
+}
+
+
+Expected Response: Whether the customer is inside any zone:
+
+{
+  "available": true,
+  "zoneId": "...",
+  "deliveryTime": "30-45 mins",
+  "deliveryCharge": 50,
+  "minOrder": 100
+}
 
 ---------------------------------------------------
 ## MAP

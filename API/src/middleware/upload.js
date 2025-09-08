@@ -10,6 +10,8 @@ const storage = multer.diskStorage({
       uploadPath = "uploads/brands";
     } else if (req.baseUrl.includes("category")) {
       uploadPath = "uploads/categories";
+    }else if (req.baseUrl.includes("product")) {
+      uploadPath = "uploads/products"; 
     }
 
 

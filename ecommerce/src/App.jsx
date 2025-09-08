@@ -1,5 +1,10 @@
 import { Routes, Route } from 'react-router-dom'
 import './App.css'
+
+import 'leaflet/dist/leaflet.css';
+import 'leaflet-draw/dist/leaflet.draw.css';
+
+
 import Home from './Compoent/Visitors/Home/home'
 import Register from './Compoent/Visitors/Register/regsiter'
 import Login from './Compoent/Visitors/Login/login'
@@ -15,8 +20,8 @@ import EditBrand from './Compoent/SuperAdmin/Brands/editBrand.jsx'
 import { ToastContainer } from "react-toastify";
 import CategoryList from './Compoent/SuperAdmin/Category/category.jsx'
 import AddCategory from './Compoent/SuperAdmin/Category/addCategory.jsx'
-import CategoryDetail from './Compoent/SuperAdmin/Category/categoryDetail.jsx'
 import EditCategory from './Compoent/SuperAdmin/Category/edit.jsx'
+import BranchList from './Compoent/Branch/branchList.jsx';
 
 function App() {
 
@@ -39,6 +44,7 @@ function App() {
         <Route path="/category" element={<CategoryList />} />
         <Route path="/category/add" element={<AddCategory />} />
         <Route path="/category/edit/:id" element={<EditCategory />} />
+         <Route path="/branch" element={<BranchList/>} />
 
         {/* <Route path='/branch-dashboard' element={<ManagerHome/>}></Route> */}
       </Routes>
