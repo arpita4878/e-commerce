@@ -21,33 +21,33 @@ export const addStore = async (req, res) => {
 };
 
 
-// Update a store
 export const updateStore = async (req, res) => {
   try {
     const { branchId, storeId } = req.params;
 
-    // Find the branch
+    if (!req.body || Object.keys(req.body).length === 0) {
+      return res.status(400).json({ message: "No data provided to update" });
+    }
+
     const branch = await Branch.findById(branchId);
     if (!branch) return res.status(404).json({ message: "Branch not found" });
 
-    // Find the store inside branch
-    const store = branch.stores.id(storeId);
+    branch.stores = branch.stores.filter(s => s !== null);
+
+    const store = branch.stores.find(s => s._id.toString() === storeId);
     if (!store) return res.status(404).json({ message: "Store not found" });
 
-    // Update only allowed fields
     const allowedFields = ["name", "isOpen", "openTime", "closeTime"];
-    allowedFields.forEach(field => {
-      if (req.body[field] !== undefinexd) {
+    for (const field of allowedFields) {
+      if (req.body[field] !== undefined) {
         store[field] = req.body[field];
       }
-    });
+    }
 
-    // Save the branch
     await branch.save();
-
     res.json(store);
   } catch (err) {
-    console.error(err);
+    console.error("Update store error:", err);
     res.status(500).json({ message: err.message });
   }
 };
@@ -55,21 +55,28 @@ export const updateStore = async (req, res) => {
 
 
 
-// Delete a store
+
 export const deleteStore = async (req, res) => {
   try {
-    const branch = await Branch.findById(req.params.branchId);
+    const { branchId, storeId } = req.params;
+
+    const branch = await Branch.findById(branchId);
     if (!branch) return res.status(404).json({ message: "Branch not found" });
 
-    const store = branch.stores.id(req.params.storeId);
+    branch.stores = branch.stores.filter(s => s !== null);
+
+    const store = branch.stores.find(s => s._id.toString() === storeId);
     if (!store) return res.status(404).json({ message: "Store not found" });
 
-    store.remove();
+    branch.stores = branch.stores.filter(s => s._id.toString() !== storeId);
+
     await branch.save();
 
     res.json({ message: "Store deleted" });
   } catch (err) {
+    console.error("Delete store error:", err);
     res.status(500).json({ message: err.message });
   }
 };
+
 

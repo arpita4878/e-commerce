@@ -3,13 +3,20 @@ import booleanPointInPolygon from '@turf/boolean-point-in-polygon';
 import { point, polygon as turfPolygon } from '@turf/helpers';
 import * as turf from "@turf/turf";
 
-
-
-
 export const checkDeliveryAvailability = async (req, res) => {
   try {
     const { branchId, storeId } = req.params;
-    const { lat, lng } = req.body; 
+    let { lat, lng } = req.body;
+
+    console.log("Incoming coords:", lat, lng, typeof lat, typeof lng);
+
+    // Convert to numbers
+    lat = parseFloat(lat);
+    lng = parseFloat(lng);
+
+    if (isNaN(lat) || isNaN(lng)) {
+      return res.status(400).json({ message: "Invalid coordinates: must be numbers" });
+    }
 
     const branch = await Branch.findById(branchId);
     if (!branch) return res.status(404).json({ message: "Branch not found" });
@@ -18,14 +25,12 @@ export const checkDeliveryAvailability = async (req, res) => {
     if (!store) return res.status(404).json({ message: "Store not found" });
 
     // Customer point
-    const point = turf.point([lng, lat]);
+    const customerPt = point([lng, lat]);
 
-    // Check all zones
+    // Check zones
     for (const zone of store.zones) {
-      const polygon = turf.polygon([zone.polygon]); // polygon = [[lng,lat], [lng,lat]...]
-      const inside = turf.booleanPointInPolygon(point, polygon);
-
-      if (inside) {
+      const zonePoly = turfPolygon(zone.polygon.coordinates);
+      if (booleanPointInPolygon(customerPt, zonePoly)) {
         return res.json({
           available: true,
           zoneId: zone._id,
@@ -37,11 +42,12 @@ export const checkDeliveryAvailability = async (req, res) => {
     }
 
     res.json({ available: false, message: "Not deliverable in this location" });
-
   } catch (err) {
+    console.error("Error in checkDeliveryAvailability:", err);
     res.status(500).json({ message: err.message });
   }
 };
+
 
 
 
@@ -71,51 +77,85 @@ export const addZone = async (req, res) => {
   }
 };
 
-// Update a zone
+
 export const updateZone = async (req, res) => {
   try {
-    const branch = await Branch.findById(req.params.branchId);
+    const { branchId, storeId, zoneId } = req.params;
+
+    const branch = await Branch.findById(branchId);
     if (!branch) return res.status(404).json({ message: "Branch not found" });
 
-    const store = branch.stores.id(req.params.storeId);
+    const store = branch.stores.id(storeId);
     if (!store) return res.status(404).json({ message: "Store not found" });
 
-    const zone = store.zones.id(req.params.zoneId);
+    const zone = store.zones.id(zoneId);
     if (!zone) return res.status(404).json({ message: "Zone not found" });
 
-    Object.assign(zone, req.body);
+
+    const allowedFields = [
+      "name",
+      "polygon",
+      "freeDeliveryAbove",
+      "minOrderValue",
+      "deliveryTime",
+      "deliveryCharge",
+      "deliveryChargeAfterKm",
+      "paymentMethods",
+    ];
+
+    let updated = false;
+    allowedFields.forEach(field => {
+      if (req.body[field] !== undefined) {
+        zone[field] = req.body[field];
+        updated = true;
+      }
+    });
+
+    if (!updated) {
+      return res.status(400).json({ message: "No valid fields to update" });
+    }
+
+    // Mark zones array as modified so Mongoose saves changes
+    store.markModified("zones");
+
     await branch.save();
 
     res.json(zone);
   } catch (err) {
-    res.status(400).json({ message: err.message });
-  }
-};
-
-// Delete a zone
-export const deleteZone = async (req, res) => {
-  try {
-    const branch = await Branch.findById(req.params.branchId);
-    if (!branch) return res.status(404).json({ message: "Branch not found" });
-
-    const store = branch.stores.id(req.params.storeId);
-    if (!store) return res.status(404).json({ message: "Store not found" });
-
-    const zone = store.zones.id(req.params.zoneId);
-    if (!zone) return res.status(404).json({ message: "Zone not found" });
-
-    zone.remove();
-    await branch.save();
-
-    res.json({ message: "Zone deleted" });
-  } catch (err) {
+    console.error("Update zone error:", err);
     res.status(500).json({ message: err.message });
   }
 };
 
-// Optional: Check if a customer point is inside a zone
-export const checkCustomerInZone = (customerLng, customerLat, zone) => {
-  const customerPt = point([customerLng, customerLat]);
-  const zonePoly = turfPolygon(zone.polygon.coordinates);
-  return booleanPointInPolygon(customerPt, zonePoly);
-}
+
+// Delete a zone
+// Delete a zone
+export const deleteZone = async (req, res) => {
+  try {
+    const { branchId, storeId, zoneId } = req.params;
+
+    const branch = await Branch.findById(branchId);
+    if (!branch) return res.status(404).json({ message: "Branch not found" });
+
+    const store = branch.stores.id(storeId);
+    if (!store) return res.status(404).json({ message: "Store not found" });
+
+    const zone = store.zones.id(zoneId);
+    if (!zone) return res.status(404).json({ message: "Zone not found" });
+
+    
+    store.zones = store.zones.filter(z => z._id.toString() !== zoneId);
+
+    store.markModified("zones");
+
+    await branch.save();
+
+    res.json({ message: "Zone deleted" });
+  } catch (err) {
+    console.error("Delete zone error:", err);
+    res.status(500).json({ message: err.message });
+  }
+};
+
+
+

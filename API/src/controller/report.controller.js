@@ -62,7 +62,7 @@ export const salesReport = async (req, res) => {
       {
         $project: {
           _id: 0,
-          branch: { $ifNull: ["$branch.name", "Unknown Branch"] },
+          branch: { $ifNull: ["$branch.branchName", "Unknown Branch"] },
           totalSales: 1,
           products: 1
         }

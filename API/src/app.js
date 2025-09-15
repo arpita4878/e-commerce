@@ -7,11 +7,21 @@ import cors from "cors";
 import { createServer } from "http";
 import { Server } from "socket.io";
 import { connectDB } from "./config/db.js";
-import { fileURLToPath } from 'url';
+  import { fileURLToPath } from 'url';
 import path from 'path'
+import fs from "fs";
+import swaggerUi from "swagger-ui-express";
+import swaggerSpec from "../swagger.js";  
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
+
+
+
+// const swaggerFile = JSON.parse(
+//   fs.readFileSync(path.join(__dirname, "../swagger-output.json"), "utf-8")
+// );
+
 
 import userRouter from "./routes/user.route.js";
 import productRoutes from "./routes/product.route.js";
@@ -23,7 +33,6 @@ import deliveryZoneRoutes from './routes/delivery.route.js';
 import reportRoutes from './routes/report.route.js';
 import CategoryRouter from './routes/category.router.js'
 import BrandRouter from './routes/brand.route.js'
-
 
 const app = express();
 const port = process.env.PORT || 5000;
@@ -92,6 +101,11 @@ io.on("connection", (socket) => {
   socket.on("disconnect", () => {
     console.log("Client disconnected:", socket.id);
   });
+});
+
+app.use("/api-docs", swaggerUi.serve, swaggerUi.setup(swaggerSpec));
+app.get("/swagger.json", (req, res) => {
+  res.json(swaggerSpec);
 });
 
 

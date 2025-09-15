@@ -34,25 +34,43 @@ export const createProduct = async (req, res) => {
 };
 
 
-
 export const updateProduct = async (req, res) => {
   try {
- const product = await Product.findById(req.params.id);
-let images = product.images || [];
-if (req.files?.length > 0) {
-  images = [...images, ...req.files.map(f => f.path)]; 
-}
-const updated = await Product.findByIdAndUpdate(
-  req.params.id,
-  { ...req.body, images },
-  { new: true }
-);
+    const product = await Product.findById(req.params.id);
+    if (!product) return res.status(404).json({ message: "Product not found" });
 
+    let images = product.images || [];
+    if (req.files?.length > 0) {
+      images = [...images, ...req.files.map(f => f.path)];
+    }
+
+    let attributes = req.body.attributes;
+    if (typeof attributes === "string") {
+      try {
+        attributes = JSON.parse(attributes); 
+      } catch {
+        attributes = {}; 
+      }
+    }
+    if (Array.isArray(attributes)) {
+      attributes = Object.fromEntries(attributes.map((v, i) => [`attr${i + 1}`, v]));
+    }
+
+    const updateData = {
+      ...req.body,
+      images,
+      attributes, 
+    };
+
+    const updated = await Product.findByIdAndUpdate(req.params.id, updateData, { new: true });
     res.json(updated);
+
   } catch (e) {
+    console.error("Update product error:", e);
     res.status(400).json({ message: e.message });
   }
 };
+
 
 
 export const deleteProduct = async (req, res) => {

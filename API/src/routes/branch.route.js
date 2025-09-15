@@ -18,6 +18,7 @@ import {
   addZone,
   updateZone,
   deleteZone,
+  checkDeliveryAvailability
 } from "../controller/zone.controller.js";
 
 const router = express.Router();
@@ -36,9 +37,10 @@ router.put("/:branchId/stores/:storeId", updateStore);
 router.delete("/:branchId/stores/:storeId", deleteStore);
 
 // Zone routes
-router.post("/", addZone); 
-router.put("/:zoneId", updateZone); 
-router.delete("/:zoneId", deleteZone); 
+router.post("/:branchId/stores/:storeId/zones", addZone); 
+router.put("/:branchId/stores/:storeId/zones/:zoneId", updateZone); 
+router.delete("/:branchId/stores/:storeId/zones/:zoneId", deleteZone); 
+router.post("/:branchId/stores/:storeId/check-delivery", checkDeliveryAvailability); 
 
 
 export default router;

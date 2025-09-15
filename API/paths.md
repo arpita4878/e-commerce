@@ -284,8 +284,8 @@ URL: http://localhost:5000/api/branches/:branchId/stores/:storeId/check-delivery
 Body (JSON):
 
 {
-  "lat": 12.9717,
-  "lng": 77.5948
+  "lat": "12.9716",
+  "lng": "77.5946"
 }
 
 
@@ -350,21 +350,21 @@ post------http://localhost:5000/api/orders
 
 cod
 {
-  "branch": "68b56cbd4071c4277f97522f",
+  "branch": "68bfb6c8d12b3c89ff89a64e",
   "items": [
     {
-      "productId": "68b7d315a28a2dd943afba51",
+      "productId": "68bfce93d3533c350493628b",
       "qty": 1
     }
   ],
   "customer": {
-    "customerId": 7,
-    "name": "Gurjeet",
-    "phone": 1111111111,
+    "customerId": 8,
+    "name": "Test Customer",
+    "phone": 1112211111,
     "address": "Vijay Nagar, Indore",
     "location": {
       "type": "Point",
-      "coordinates": [75.8577, 22.7196]
+      "coordinates": [77.5946, 12.9716]
     }
   },
   "payment": {
@@ -375,28 +375,27 @@ cod
 
 
 
+
 ## online payment
 {
-  "branch": "68b56cbd4071c4277f97522f",
+  "branch": "68bfb6c8d12b3c89ff89a64e",
   "items": [
     {
-      "productId": "68b67cd41b398258eadea289",
-      "qty": 2
-    },
-    {
-      "productId": "68b56c404071c4277f975229",
+      "productId": "68bfce93d3533c350493628b",
       "qty": 1
     }
   ],
   "customer": {
-    "name": "Arpita",
-    "phone": 1111111111,
+    "customerId": 8,
+    "name": "Test Customer",
+    "phone": 1112211111,
     "address": "Vijay Nagar, Indore",
     "location": {
       "type": "Point",
-      "coordinates": [75.8577, 22.7196]
+      "coordinates": [77.5946, 12.9716]
     }
   },
+
   "payment": {
     "method": "online",
     "status": "paid",

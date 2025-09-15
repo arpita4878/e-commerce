@@ -1,39 +1,86 @@
 import Order from "../model/order.schema.js";
 import User from "../model/user.schema.js";
 import Inventory from "../model/inventory.js";
-import DeliveryZone from "../model/deliveryZone.schema.js";
 import Branch from "../model/branch.schema.js";
-import { haversineKm } from "../lib/geo.js";
+
+function haversineKm([lng1, lat1], [lng2, lat2]) {
+  const toRad = x => (x * Math.PI) / 180;
+  const R = 6371; // Earth radius in km
+
+  const dLat = toRad(lat2 - lat1);
+  const dLng = toRad(lng2 - lng1);
+
+  const a =
+    Math.sin(dLat / 2) ** 2 +
+    Math.cos(toRad(lat1)) * Math.cos(toRad(lat2)) * Math.sin(dLng / 2) ** 2;
+
+  return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+}
+
+// Ray-casting algorithm for point-in-polygon check
+function pointInPolygon(point, polygon) {
+  const [x, y] = point;
+  let inside = false;
+
+  for (const ring of polygon) {
+    for (let j = 0, k = ring.length - 1; j < ring.length; k = j++) {
+      const xi = ring[j][0],
+        yi = ring[j][1];
+      const xk = ring[k][0],
+        yk = ring[k][1];
+
+      const intersect = yi > y !== yk > y && x < ((xk - xi) * (y - yi)) / (yk - yi) + xi;
+      if (intersect) inside = !inside;
+    }
+  }
+
+  return inside;
+}
+
 
 
 
 export async function createOrder(req, res, next) {
   try {
-    const { branch, items, customer, payment } = req.body;
+    const { branch, items, customer: customerInput, payment } = req.body;
 
+   
     if (!req.user || !req.user._id) {
       return res.status(401).json({ message: "Unauthorized: login required" });
     }
 
-    if (!customer?.location?.coordinates) {
+    let customerDoc = req.user;
+    if (customerInput?.email) {
+      customerDoc = await User.findOne({ email: customerInput.email }) || customerDoc;
+    }
+
+    if (!customerDoc) return res.status(404).json({ message: "Customer not found" });
+
+   
+    const customerLocation = customerInput?.location || customerDoc.location;
+    if (!customerLocation?.coordinates) {
       return res.status(400).json({ message: "customer.location is required (Point with [lng,lat])" });
     }
 
+  
+    const branchDoc = await Branch.findById(branch);
+    if (!branchDoc) return res.status(404).json({ message: "Branch not found" });
+
+    
     let itemsTotal = 0;
     const normalized = [];
 
     for (const it of items) {
-      const inv = await Inventory.findOne({ productId: it.productId, branchId: branch })
-        .populate("productId");
-      if (!inv) return res.status(400).json({ message: "Inventory not found for product/branch" });
-      if (inv.quantity < it.qty) return res.status(400).json({ message: `Insufficient stock for ${inv.productId.name}` });
+      const inv = await Inventory.findOne({ productId: it.productId, branchId: branch }).populate("productId");
+      if (!inv) return res.status(400).json({ message: `Inventory not found for product ${it.productId}` });
+      if (inv.quantity < it.qty) return res.status(400).json({ message: `Insufficient stock for ${inv.productId.productName}` });
 
       itemsTotal += inv.price * it.qty;
 
       normalized.push({
         productId: inv.productId._id,
-        productName: inv.productId.name,
-        productCode: inv.productId.sku,
+        productName: inv.productId.productName,
+        productCode: inv.productId.barcode,
         qty: it.qty,
         price: inv.price
       });
@@ -42,78 +89,56 @@ export async function createOrder(req, res, next) {
       await inv.save();
     }
 
-    // --- delivery fee from zone ---
-    const branchDoc = await Branch.findById(branch);
-    if (!branchDoc) return res.status(404).json({ message: "Branch not found" });
-
-    const zone = await DeliveryZone.findOne({ branchId: branch, isActive: true });
-    if (!zone) return res.status(400).json({ message: "No active delivery zone configured for this branch" });
-
-    const distanceKm = haversineKm(branchDoc.location.coordinates, customer.location.coordinates);
-
-    let deliveryFee = 0;
-    if (zone.pricing.type === "flat") {
-      deliveryFee = zone.pricing.baseFee || 0;
-    } else if (zone.pricing.type === "per_km") {
-      deliveryFee = (zone.pricing.baseFee || 0) + (zone.pricing.perKmFee || 0) * distanceKm;
-    } else if (zone.pricing.type === "bands") {
-      const band = zone.pricing.bands.find(b => distanceKm >= b.fromKm && distanceKm <= b.toKm);
-      deliveryFee = band ? band.fee : (zone.pricing.baseFee || 0);
-    }
-
-    deliveryFee = Math.round(Math.max(0, deliveryFee));
-
-    if (itemsTotal < (zone.minOrderValue || 0)) {
-      return res.status(400).json({ message: `Minimum order ₹${zone.minOrderValue}` });
-    }
-
+   
+    const deliveryFee = 50; 
     const total = itemsTotal + deliveryFee;
 
-    // --- create order ---
+   
     const order = await Order.create({
       branch,
       items: normalized,
       total,
-      customerId: req.user._id,     // link to logged-in user
+      customerId: customerDoc._id,
       customer: {
-        customerId: customer.customerId,
-        name: customer.name || req.user.name,
-        phone: customer.phone || req.user.phone,
-        address: customer.address,
-        location: customer.location
+        customerId: customerDoc._id,
+        name: customerDoc.name,
+        email: customerDoc.email,
+        phone: customerDoc.phone,
+        address: customerInput.address || customerDoc.address,
+        location: customerLocation
       },
       payment,
       delivery: {
-        zoneId: zone._id,
+        zoneId: null, 
         fee: deliveryFee,
-        etaMinutes: zone.etaMinutes
+        etaMinutes: 30
       },
-      delivery_boy: {
-        id: null,
-        name: null,
-        phone: null
-      }
+      delivery_boy: { id: null, name: null, phone: null }
     });
 
-    // --- update user stats ---
-    await User.findByIdAndUpdate(req.user._id, {
+    
+    await User.findByIdAndUpdate(customerDoc._id, {
       $inc: { orderCount: 1, totalOrderAmount: total },
       $set: { lastOrderDate: new Date() }
     });
 
-    // Notify branch in real-time
-    global._io.to(String(branch)).emit("newOrder", {
-      orderId: order._id,
-      status: order.status,
-      items: order.items,
-      total: order.total,
-    });
+
+    if (global._io) {
+      global._io.to(String(branch)).emit("newOrder", {
+        orderId: order._id,
+        status: order.status,
+        items: order.items,
+        total: order.total,
+      });
+    }
 
     res.status(201).json({ order });
+
   } catch (err) {
     next(err);
   }
 }
+
 
 
 export async function listOrders(req, res, next) {

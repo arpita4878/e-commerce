@@ -24,11 +24,15 @@
     "dotenv": "^17.2.1",
     "exceljs": "^4.4.0",
     "express": "^5.1.0",
+    "haversine-distance": "^1.2.4",
     "jsonwebtoken": "^9.0.2",
     "libphonenumber-js": "^1.12.15",
     "mongoose": "^7.0.0",
     "multer": "^2.0.2",
     "socket.io": "^4.8.1",
+    "swagger-autogen": "^2.23.7",
+    "swagger-jsdoc": "^6.2.8",
+    "swagger-ui-express": "^5.0.1",
     "xlsx": "^0.18.5"
   }
 }
