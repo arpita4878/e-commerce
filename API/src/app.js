@@ -9,18 +9,11 @@ import { Server } from "socket.io";
 import { connectDB } from "./config/db.js";
   import { fileURLToPath } from 'url';
 import path from 'path'
-import fs from "fs";
 import swaggerUi from "swagger-ui-express";
 import swaggerSpec from "../swagger.js";  
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
-
-
-
-// const swaggerFile = JSON.parse(
-//   fs.readFileSync(path.join(__dirname, "../swagger-output.json"), "utf-8")
-// );
 
 
 import userRouter from "./routes/user.route.js";
@@ -108,9 +101,13 @@ app.get("/swagger.json", (req, res) => {
   res.json(swaggerSpec);
 });
 
-
-connectDB().then(() => {
-  httpServer.listen(port, () => {
-    console.log(` Server running on http://localhost:${port}`);
+connectDB()
+  .then(() => {
+    httpServer.listen(port, () => {
+      console.log(`Server running on http://localhost:${port}`);
+    });
+  })
+  .catch((err) => {
+    console.error(" Failed to connect to DB:", err.message);
+    process.exit(1); 
   });
-});

@@ -22,6 +22,7 @@ import CategoryList from './Compoent/SuperAdmin/Category/category.jsx'
 import AddCategory from './Compoent/SuperAdmin/Category/addCategory.jsx'
 import EditCategory from './Compoent/SuperAdmin/Category/edit.jsx'
 import BranchList from './Compoent/Branch/branchList.jsx';
+import BranchDetail from './Compoent/Branch/BranchDetail.jsx';
 
 function App() {
 
@@ -45,11 +46,12 @@ function App() {
         <Route path="/category/add" element={<AddCategory />} />
         <Route path="/category/edit/:id" element={<EditCategory />} />
          <Route path="/branch" element={<BranchList/>} />
+         <Route path="/branch/branch" element={<BranchDetail/>} />
 
         {/* <Route path='/branch-dashboard' element={<ManagerHome/>}></Route> */}
       </Routes>
 
-      <ToastContainer position="top-right" autoClose={2000} />
+      <ToastContainer position="top-right" autoClose={1200} />
     </>
   )
 }

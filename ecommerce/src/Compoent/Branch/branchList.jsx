@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import axios from "axios";
+import { __branchapiurl } from "../../../API_URL";
 // import BranchDetail from "./BranchDetail";
 // import AddBranchForm from "./AddBranchForm";
 
@@ -10,8 +11,10 @@ export default function BranchList() {
 
   const fetchBranches = async () => {
     try {
-      const res = await axios.get("http://localhost:5000/api/branch");
+      const res = await axios.get(__branchapiurl);
       setBranches(res.data.branches || []);
+      console.log(res.data.branches);
+      
     } catch (err) {
       console.error(err);
     }

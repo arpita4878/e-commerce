@@ -48,6 +48,8 @@ export default function EditBrand() {
     try {
       const res = await axios.get(`${__brandapiurl}${id}/products`);
       setProducts(res.data?.products || []);
+      console.log(res.data);
+      
     } catch (err) {
       console.error("Error fetching products:", err);
     }
@@ -93,8 +95,8 @@ export default function EditBrand() {
 
       toast.success("Brand updated successfully!");
       setTimeout(() => {
-        navigate(`/brand/${id}`);
-      }, 1500);
+        navigate(`/brand`);
+      }, 1200);
     } catch (err) {
       console.error("Error updating brand:", err.response?.data || err.message);
       toast.error("Error updating brand.");
@@ -186,15 +188,15 @@ export default function EditBrand() {
             <tr>
               <th>Name</th>
               <th>Price</th>
-              <th>SKU</th>
+              <th>BARCODE</th>
             </tr>
           </thead>
           <tbody>
             {products.map((p) => (
               <tr key={p._id}>
-                <td>{p.name}</td>
+                <td>{p.productName}</td>
                 <td>₹{p.basePrice}</td>
-                <td>{p.sku}</td>
+                <td>{p.barcode}</td>
               </tr>
             ))}
           </tbody>
